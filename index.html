@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>PAwChO lab8</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        select,
+        button {
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        label {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e2e8f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Pogoda</h2>
+        <form action="/weather" method="GET">
+
+            <label for="region">Wybierz województwo:</label>
+            <select id="region" onchange="zaktualizujMiasta()">
+                <option value="">-- Wybierz województwo --</option>
+            </select>
+
+            <label for="location">Wybierz stację pomiarową:</label>
+            <select name="location" id="location" disabled>
+                <option value="">-- Najpierw wybierz województwo --</option>
+            </select>
+
+            <button type="submit">Sprawdź</button>
+        </form>
+
+        {{if .DanePogodowe.Stacja}}
+        <div class="result">
+            <h3>Stacja: {{.DanePogodowe.Stacja}}</h3>
+            <p><strong>Temperatura:</strong> {{.DanePogodowe.Temperatura}} °C</p>
+            <p><strong>Prędkość wiatru:</strong> {{.DanePogodowe.PredkoscWiatru}} km/h</p>
+            <p><strong>Ciśnienie:</strong> {{.DanePogodowe.Cisnienie}} hPa</p>
+            <p><strong>Wilgotność względna:</strong> {{.DanePogodowe.WilgotnoscWzgledna}} %</p>
+            <p><strong>Suma opadów:</strong> {{.DanePogodowe.SumaOpadu}} mm</p>
+        </div>
+        {{end}}
+    </div>
+
+    <script>
+        const daneRegionow = {{.RegionyJSON }};
+        const wczesniejWybraneMiasto = "{{.Wybrane}}";
+
+        const wyborWojewodztwa = document.getElementById('region');
+        const wyborMiasta = document.getElementById('location');
+
+        // 1. Wypełniamy listę województw
+        for (const nazwaWojewodztwa in daneRegionow) {
+            let opcja = document.createElement('option');
+            opcja.value = nazwaWojewodztwa;
+            opcja.text = nazwaWojewodztwa;
+            wyborWojewodztwa.add(opcja);
+        }
+
+        // 2. Funkcja aktualizująca miasta po wybraniu województwa
+        function zaktualizujMiasta() {
+            const wybraneWojewodztwo = wyborWojewodztwa.value;
+            wyborMiasta.innerHTML = '';
+
+            if (wybraneWojewodztwo === "") {
+                wyborMiasta.disabled = true;
+                let opcja = document.createElement('option');
+                opcja.text = "-- Najpierw wybierz województwo --";
+                wyborMiasta.add(opcja);
+                return;
+            }
+
+            wyborMiasta.disabled = false;
+            let opcja = document.createElement('option');
+            opcja.value = "";
+            opcja.text = "-- Wybierz miasto --";
+            wyborMiasta.add(opcja);
+
+            const miasta = daneRegionow[wybraneWojewodztwo];
+            for (const nazwaMiasta in miasta) {
+                let opc = document.createElement('option');
+                opc.value = nazwaMiasta;
+                opc.text = nazwaMiasta;
+                wyborMiasta.add(opc);
+            }
+        }
+
+        // 3. Zachowanie stanu po sprawdzeniu
+        if (wczesniejWybraneMiasto) {
+            for (const nazwaWojewodztwa in daneRegionow) {
+                if (daneRegionow[nazwaWojewodztwa][wczesniejWybraneMiasto]) {
+                    wyborWojewodztwa.value = nazwaWojewodztwa;
+                    zaktualizujMiasta();
+                    wyborMiasta.value = wczesniejWybraneMiasto;
+                    break;
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
